@@ -20,6 +20,36 @@ Storage:     $SCRATCH — purge FASTQs after alignment, keep BAM + matrices only
 Target size: ~50-80 GB final outputs (from ~400-600 GB raw)
 ```
 
+### Cluster (hpc-rc08)
+```
+Host:        hpc-rc08
+Base path:   /mnt/dzl_bioinf/meghadri/
+Projects:    /mnt/dzl_bioinf/meghadri/projects/ebv_temp/
+Softwares:   /mnt/dzl_bioinf/meghadri/softwares/
+Scheduler:   SLURM
+Containers:  Singularity (confirm: singularity --version)
+
+## Installed binaries (confirmed working)
+STAR:        /mnt/dzl_bioinf/meghadri/softwares/STAR-2.7.11b/bin/Linux_x86_64_static/STAR
+Nextflow:    /mnt/dzl_bioinf/meghadri/softwares/nextflow
+
+## Nextflow — Java proxy fix (run before every nextflow call)
+unset _JAVA_OPTIONS
+export JAVA_TOOL_OPTIONS="-Dhttp.proxyHost=172.24.2.50 -Dhttp.proxyPort=8080 -Dhttps.proxyHost=172.24.2.50 -Dhttps.proxyPort=8080"
+export NXF_OPTS="-Dhttp.proxyHost=172.24.2.50 -Dhttp.proxyPort=8080 -Dhttps.proxyHost=172.24.2.50 -Dhttps.proxyPort=8080"
+
+## fasterq-dump — confirmed flag issue
+# --progress is NOT a valid flag — omit it
+fasterq-dump ${SRR} --split-files --threads 4 --outdir $OUTDIR
+
+## STAR — do NOT compile from source (simde AVX2 UINT32_C error)
+# Use static binary above. No conda, no compilation needed.
+
+Storage:     /mnt/dzl_bioinf/meghadri/ (confirm quota: df -h /mnt/dzl_bioinf/meghadri)
+```
+
+
+
 ### Local (Mac M1 Max)
 ```
 RAM:         64 GB unified memory
@@ -154,6 +184,7 @@ rm -rf $SCRATCH/sra_cache/${SRR_ID}
 
 ### scRNA-seq: STARsolo (NOT Cell Ranger)
 ```bash
+STAR=/mnt/dzl_bioinf/meghadri/softwares/STAR-2.7.11b/bin/Linux_x86_64_static/STAR
 # Cell Ranger is x86-only — STARsolo is the drop-in replacement
 STAR \
   --soloType CB_UMI_Simple \
